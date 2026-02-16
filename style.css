@@ -1,0 +1,33 @@
+body {
+  font-family: Arial, sans-serif;
+  padding: 40px;
+  background-color: #f4f8fb;
+}
+
+h1, h2 {
+  color: #0b4f6c;
+}
+
+input, textarea, select {
+  display: block;
+  width: 300px;
+  margin: 10px 0;
+  padding: 8px;
+}
+
+button {
+  background-color: #0b4f6c;
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  cursor: pointer;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+.warning {
+  color: red;
+  margin-top: 20px;
+}
