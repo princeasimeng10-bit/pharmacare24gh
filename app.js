@@ -1,30 +1,51 @@
-document.getElementById("patientForm").addEventListener("submit", function (e) {
-  e.preventDefault(); // stop page refresh
+<script>
+const supabaseUrl = "https://mjoknzqvxexpuchdqwjm.supabase.co";
+const supabaseKey = "sb_publishable_eyvI6pGV3JDqsxeqlj34LA_Bna6Yt9Q";
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-  // 1️⃣ Collect form data
-  const formData = new FormData(this);
-  const data = Object.fromEntries(formData.entries());
+document.getElementById("patientForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-  // 2️⃣ Send to Google Apps Script Web App
-  fetch("https://script.google.com/macros/s/AKfycbyLEaww4MxR4pYSWPUyUFnW00n1w0EZbGDKDzpXqNWwfd_m97KNsweh9FRCsc47d1yMKQ/exec", {  // <-- REPLACE this with your actual URL
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(data)
-  })
-  .then(response => response.json()) // Expect JSON response
-  .then(result => {
-    if (result.status === "success") {
-      alert("Request submitted successfully!");
-      this.reset(); // clear the form
-    } else {
-      alert("Submission failed: Unexpected response");
-      console.log("Server response:", result);
+  const form = e.target;
+  const formData = new FormData(form);
+
+  const file = formData.get("prescription_file");
+
+  let prescriptionUrl = null;
+
+  if (file && file.size > 0) {
+    const fileName = Date.now() + "_" + file.name;
+
+    const { data, error } = await supabaseClient.storage
+      .from("prescriptions")
+      .upload(fileName, file);
+
+    if (!error) {
+      prescriptionUrl = `${supabaseUrl}/storage/v1/object/public/prescriptions/${fileName}`;
     }
-  })
-  .catch(error => {
-    alert("Submission failed: Check console for details");
-    console.error("Error sending form data:", error);
-  });
+  }
+
+  const requestData = {
+    patient_name: formData.get("patient_name"),
+    phone: formData.get("phone"),
+    symptoms: formData.get("symptoms"),
+    allergies: formData.get("allergies"),
+    delivery_type: formData.get("delivery_type"),
+    request_callback: formData.get("request_callback") === "true",
+    doctor_referral: formData.get("doctor_referral") === "true",
+    prescription_url: prescriptionUrl
+  };
+
+  const { error } = await supabaseClient
+    .from("requests")
+    .insert([requestData]);
+
+  if (!error) {
+    alert("Request Submitted Successfully");
+    form.reset();
+  } else {
+    alert("Submission failed");
+    console.log(error);
+  }
 });
+</script>
